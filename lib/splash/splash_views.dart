@@ -35,7 +35,7 @@ class _MySplashViewsState extends State<MySplashViews> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Image.asset(
-              'assets/ngao.png',
+              'assets/loggz.png',
               // width: 100,
               // height: 100,
             ),
@@ -49,7 +49,7 @@ class _MySplashViewsState extends State<MySplashViews> {
               height: 15,
             ),
             const Text(
-              "Community Based Social\n Protection App",
+              "Student Face Recognition App",
               textAlign: TextAlign.center,
               style: TextStyle(
 //                    color: Colors.black,

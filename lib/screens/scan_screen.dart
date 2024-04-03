@@ -27,7 +27,7 @@ class _ScanScreenState extends State<ScanScreen> {
           _imagePath = pickedFile.path;
         });
 
-        _verify_image_API();
+        // _verify_image_API();
       } else {
         print('No image selected.');
       }
@@ -63,13 +63,21 @@ class _ScanScreenState extends State<ScanScreen> {
       // });
       // showSnack(context, 'No Network!');
     } else {
-      var body = json.decode(res!.body);
+      // var body = json.decode(res!.body);
+      // print(body);
+
+      var body = res.data; // Access response data insRtead of body
       print(body);
 
-      if (res.statusCode == 200) {
-        showSnack(context, 'File Uploaded Successfully');
+      print(body['first_name'].toString());
 
-        Navigator.pop(this.context);
+      if (res.statusCode == 200) {
+        // ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(
+        //   content: Text('File Uploaded Successfully'),
+        // ));
+
+        // Navigator.pop(this.context);
+        print(body);
 
         setState(() {});
       } else if (res.statusCode == 400) {

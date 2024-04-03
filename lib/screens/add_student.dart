@@ -51,7 +51,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   _add_record_API() async {
     print('Bra_______bra');
 
-    // print(file!.path);
+    print(_isEligible.value);
 
     FormData formData = FormData.fromMap({
       "image": await MultipartFile.fromFile(
@@ -79,11 +79,16 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       // });
       // showSnack(context, 'No Network!');
     } else {
-      var body = json.decode(res!.body);
+      // var body = json.decode(res!.body);
+      // print(body);
+
+      var body = res.data; // Access response data instead of body
       print(body);
 
       if (res.statusCode == 200) {
-        showSnack(context, 'File Uploaded Successfully');
+        ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(
+          content: Text('File Uploaded Successfully'),
+        ));
 
         Navigator.pop(this.context);
 
@@ -271,7 +276,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                       );
                       Provider.of<StudentProvider>(context, listen: false)
                           .addStudent(newStudent);
-                      _add_record_API();
+                      // _add_record_API();
                       Navigator.of(context).pop();
                     }
                   },

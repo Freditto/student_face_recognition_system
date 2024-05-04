@@ -10,8 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CallApi {
 
   // static const String url = 'http://157.230.82.95:8001/';
-  // static const String url = 'http://192.168.100.26:8001/';
-  static const String url = 'https://6771-41-222-178-3.ngrok-free.app/';
+  static const String url = 'http://143.110.236.175:5000/';
+  // static const String url = 'https://6771-41-222-178-3.ngrok-free.app/';
 
   static const String media_url = 'http://68.183.5.97:5000/media/v1/';
   static const String flask_microservice_url = 'http://68.183.5.97:3000/';

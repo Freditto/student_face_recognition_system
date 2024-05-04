@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:facial_recognition_app/api.dart';
 import 'package:facial_recognition_app/utils/snackbar.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,13 +32,17 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   File? _image;
   String? _imagePath;
 
-  Future<void> _getImage(ImageSource source) async {
+  bool imageAvailable = false;
+  late Uint8List imageFile;
+
+  Future<void> _getImage() async {
     try {
-      final pickedFile = await ImagePicker().pickImage(source: source);
+      final pickedFile =
+          await FilePicker.platform.pickFiles(type: FileType.image);
       if (pickedFile != null) {
         setState(() {
-          _image = File(pickedFile.path);
-          _imagePath = pickedFile.path;
+          imageFile = pickedFile.files.first.bytes!;
+          imageAvailable = true;
         });
       } else {
         print('No image selected.');
@@ -54,18 +58,20 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     print(_isEligible.value);
 
     FormData formData = FormData.fromMap({
-      "image": await MultipartFile.fromFile(
-        _imagePath!,
+      "image": await MultipartFile.fromBytes(
+        imageFile,
 
-        filename: basename(
-          _imagePath!,
-        ),
+        filename: 'image.jpg', // Use a default filename here
         // contentType:  MediaType("image", "jpg"), //add this
       ),
       "firstname": _firstnameController.text,
       "lastname": _lastnameController.text,
       "registration": _regNumberController.text,
-      "is_registered": _isEligible.value,
+      "gender": _genderController.text,
+      "program": _programController.text,
+      "class": _classController.text,
+      "nta_level": _ntaLevelController.text,
+      "is_eligible": _isEligible.value.toString(),
     });
 
     print(formData);
@@ -117,11 +123,11 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 16.0),
-                _image != null
+                imageAvailable
                     ? Column(
                         children: [
-                          Image.file(
-                            _image!,
+                          Image.memory(
+                            imageFile,
                             width: 100,
                             height: 100,
                             fit: BoxFit.cover,
@@ -132,25 +138,25 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                       )
                     : SizedBox(),
                 SizedBox(height: 16.0),
-                ElevatedButton(
-                  onPressed: () {
-                    _getImage(ImageSource.camera);
-                  },
-                  child: Text('Take Picture'),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(20.0), // Rounded corners
-                    ),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 16.0), // Increase height
-                    minimumSize: Size(double.infinity, 0), // Take full width
-                  ),
-                ),
+                // ElevatedButton(
+                //   onPressed: () {
+                //     _getImage(ImageSource.camera);
+                //   },
+                //   child: Text('Take Picture'),
+                //   style: ElevatedButton.styleFrom(
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius:
+                //           BorderRadius.circular(20.0), // Rounded corners
+                //     ),
+                //     padding:
+                //         EdgeInsets.symmetric(vertical: 16.0), // Increase height
+                //     minimumSize: Size(double.infinity, 0), // Take full width
+                //   ),
+                // ),
                 SizedBox(height: 16.0),
                 ElevatedButton(
                   onPressed: () {
-                    _getImage(ImageSource.gallery);
+                    _getImage();
                   },
                   child: Text('Choose from Gallery'),
                   style: ElevatedButton.styleFrom(
@@ -256,29 +262,29 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                 SizedBox(height: 16.0),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_firstnameController.text.isNotEmpty &&
-                        _regNumberController.text.isNotEmpty) {
-                      Uint8List? pictureBytes;
-                      if (_image != null) {
-                        final bytes = await _image!.readAsBytes();
-                        pictureBytes = bytes;
-                      }
-                      final newStudent = Student(
-                        regNumber: _regNumberController.text,
-                        first_name: _firstnameController.text,
-                        last_name: _lastnameController.text,
-                        gender: _genderController.text,
-                        program: _programController.text,
-                        studentClass: _classController.text,
-                        ntaLevel: _ntaLevelController.text,
-                        isEligible: _isEligible.value,
-                        picture: pictureBytes,
-                      );
-                      Provider.of<StudentProvider>(context, listen: false)
-                          .addStudent(newStudent);
-                      // _add_record_API();
-                      Navigator.of(context).pop();
-                    }
+                    // if (_firstnameController.text.isNotEmpty &&
+                    //     _regNumberController.text.isNotEmpty) {
+                    //   Uint8List? pictureBytes;
+                    //   if (_image != null) {
+                    //     final bytes = await _image!.readAsBytes();
+                    //     pictureBytes = bytes;
+                    // }
+                    // final newStudent = Student(
+                    //   regNumber: _regNumberController.text,
+                    //   first_name: _firstnameController.text,
+                    //   last_name: _lastnameController.text,
+                    //   gender: _genderController.text,
+                    //   program: _programController.text,
+                    //   studentClass: _classController.text,
+                    //   ntaLevel: _ntaLevelController.text,
+                    //   isEligible: _isEligible.value,
+                    //   picture: pictureBytes,
+                    // );
+                    // Provider.of<StudentProvider>(context, listen: false)
+                    //     .addStudent(newStudent);
+                    _add_record_API();
+                   
+                    // }
                   },
                   child: Text('Add Student'),
                   style: ElevatedButton.styleFrom(

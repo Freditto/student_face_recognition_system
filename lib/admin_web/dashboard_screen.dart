@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:facial_recognition_app/admin_web/admin_login_screen.dart';
+import 'package:facial_recognition_app/api.dart';
 import 'package:facial_recognition_app/screens/add_student.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,12 +20,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
   PageController pageController = PageController();
   SideMenuController sideMenu = SideMenuController();
 
+  List<Student>? studentDataList;
+
   @override
   void initState() {
     sideMenu.addListener((index) {
       pageController.jumpToPage(index);
     });
+    fetchStudentData(context); // Call fetchStudentData here
     super.initState();
+  }
+
+  fetchStudentData(BuildContext context) async {
+    String url =
+        'get_records'; // Adjust the URL to match the endpoint for fetching students
+    var res = await CallApi().authenticatedGetRequest(url, context: context);
+    print('*' * 10);
+    print('Response');
+    print(res);
+    if (res != null) {
+      var body = json.decode(res.body);
+      print(body);
+      var studentRecords = body[
+          'data']; // Assuming 'records' contains an array of student records
+      List<Student> students = [];
+
+      for (var record in studentRecords) {
+        Student student = Student.fromMap(record);
+        students.add(student);
+      }
+      print('Length');
+      print(students.length);
+      setState(() {
+        // Set the state with the fetched student data
+        studentDataList = students;
+        // next = body['next']; // Update pagination parameter if needed
+        // waiting_scroll_request = false;
+      });
+    } else {
+      // Handle case when response is null (no network, error, etc.)
+      // showSnack(context, 'No network');
+      return [];
+    }
+  }
+
+  deleteStudent(String regNumber) async {
+    try {
+      // Prepare the FormData request
+      FormData formData = FormData.fromMap({
+        "registration": regNumber, // Pass the registration number
+      });
+
+      // Make the POST request to delete the student
+      // var response = await Dio().post('delete_record', data: formData);
+
+      var res =
+          await CallApi().authenticatedUploadRequest(formData, 'delete_record');
+
+      // Check if the request was successful (status code 200)
+      if (res.statusCode == 200) {
+        // Student deleted successfully
+        print('Student deleted successfully');
+        // Update UI or perform any necessary actions after deletion
+        setState(() {});
+      } else {
+        // Handle other status codes if needed
+        print('Failed to delete student');
+      }
+    } catch (e) {
+      // Handle any errors that occur during the process
+      print('Error deleting student: $e');
+    }
   }
 
   _logoutDialog(BuildContext context) {
@@ -86,10 +156,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final studentProvider = Provider.of<StudentProvider>(context);
-
-    studentProvider.getAllStudents();
-
     return Scaffold(
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -163,65 +229,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 icon: const Icon(Icons.supervisor_account),
               ),
-              // SideMenuExpansionItem(
-              //   title: "Expansion Item",
-              //   icon: const Icon(Icons.kitchen),
-              //   children: [
-              //     SideMenuItem(
-              //       title: 'Expansion Item 1',
-              //       onTap: (index, _) {
-              //         sideMenu.changePage(index);
-              //       },
-              //       icon: const Icon(Icons.home),
-              //       badgeContent: const Text(
-              //         '3',
-              //         style: TextStyle(color: Colors.white),
-              //       ),
-              //       tooltipContent: "Expansion Item 1",
-              //     ),
-              //     SideMenuItem(
-              //       title: 'Expansion Item 2',
-              //       onTap: (index, _) {
-              //         sideMenu.changePage(index);
-              //       },
-              //       icon: const Icon(Icons.supervisor_account),
-              //     )
-              //   ],
-              // ),
-              // SideMenuItem(
-              //   title: 'Files',
-              //   onTap: (index, _) {
-              //     sideMenu.changePage(index);
-              //   },
-              //   icon: const Icon(Icons.file_copy_rounded),
-              //   trailing: Container(
-              //       decoration: const BoxDecoration(
-              //           color: Colors.amber,
-              //           borderRadius: BorderRadius.all(Radius.circular(6))),
-              //       child: Padding(
-              //         padding: const EdgeInsets.symmetric(
-              //             horizontal: 6.0, vertical: 3),
-              //         child: Text(
-              //           'New',
-              //           style: TextStyle(fontSize: 11, color: Colors.grey[800]),
-              //         ),
-              //       )),
-              // ),
-              // SideMenuItem(
-              //   title: 'Download',
-              //   onTap: (index, _) {
-              //     sideMenu.changePage(index);
-              //   },
-              //   icon: const Icon(Icons.download),
-              // ),
-              // SideMenuItem(
-              //   builder: (context, displayMode) {
-              //     return const Divider(
-              //       endIndent: 8,
-              //       indent: 8,
-              //     );
-              //   },
-              // ),
               SideMenuItem(
                 title: 'Settings',
                 onTap: (index, _) {
@@ -229,18 +236,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 icon: const Icon(Icons.settings),
               ),
-              // SideMenuItem(
-              //   onTap:(index, _){
-              //     sideMenu.changePage(index);
-              //   },
-              //   icon: const Icon(Icons.image_rounded),
-              // ),
-              // SideMenuItem(
-              //   title: 'Only Title',
-              //   onTap:(index, _){
-              //     sideMenu.changePage(index);
-              //   },
-              // ),
               SideMenuItem(
                 title: 'Exit',
                 icon: Icon(Icons.exit_to_app),
@@ -266,76 +261,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                studentProvider.students.isEmpty
-                    ? Center(
-                        child: Text('No students available'),
-                      )
-                    : ListView.builder(
-                        itemCount: studentProvider.students.length,
-                        itemBuilder: (context, index) {
-                          final student = studentProvider.students[index];
-                          return GestureDetector(
-                            onTap: () {
-                              // Handle tap event if needed
-                            },
-                            onLongPress: () {
-                              _showOptionsDialog(context, student);
-                            },
-                            child: ListTile(
-                              leading: student.picture != null
-                                  ? CircleAvatar(
-                                      backgroundImage:
-                                          MemoryImage(student.picture!),
-                                    )
-                                  : null, // Display student's image as a circle avatar
-                              title: Text(student.first_name!),
-                              subtitle: Text(student.regNumber!),
-                              // Add more details as needed
-                            ),
-                          );
+                ListView.builder(
+                  itemCount: studentDataList?.length ??
+                      1, // Show loader if data is not available
+                  itemBuilder: (context, index) {
+                    if (studentDataList == null) {
+                      // Display loader if data is not yet available
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                        ],
+                      );
+                    } else {
+                      final student = studentDataList![index];
+                      return GestureDetector(
+                        onTap: () {
+                          // Handle tap event if needed
                         },
-                      ),
-
-                // Container(
-                //   color: Colors.white,
-                //   child: const Center(
-                //     child: Text(
-                //       'Expansion Item 1',
-                //       style: TextStyle(fontSize: 35),
-                //     ),
-                //   ),
-                // ),
-                // Container(
-                //   color: Colors.white,
-                //   child: const Center(
-                //     child: Text(
-                //       'Expansion Item 2',
-                //       style: TextStyle(fontSize: 35),
-                //     ),
-                //   ),
-                // ),
-                // Container(
-                //   color: Colors.white,
-                //   child: const Center(
-                //     child: Text(
-                //       'Files',
-                //       style: TextStyle(fontSize: 35),
-                //     ),
-                //   ),
-                // ),
-                // Container(
-                //   color: Colors.white,
-                //   child: const Center(
-                //     child: Text(
-                //       'Download',
-                //       style: TextStyle(fontSize: 35),
-                //     ),
-                //   ),
-                // ),
-
-                // this is for SideMenuItem with builder (divider)
-                // const SizedBox.shrink(),
-
+                        onLongPress: () {
+                          _showOptionsDialog(context, student);
+                        },
+                        child: ListTile(
+                          leading: student.picture != null
+                              ? CircleAvatar(
+                                  backgroundImage:
+                                      MemoryImage(student.picture!),
+                                )
+                              : null,
+                          title: Text(
+                              '${student.first_name} ${student.last_name}'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Reg Number: ${student.regNumber}'),
+                              Text(
+                                  'Eligibility: ${student.isEligible != null ? (student.isEligible! ? 'Eligible' : 'Not Eligible') : 'Unknown'}'),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.info),
+                            onPressed: () {
+                              _showStudentDetailsDialog(context, student);
+                            },
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
                 Container(
                   color: Colors.white,
                   child: const Center(
@@ -356,10 +331,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             context,
             MaterialPageRoute(builder: (context) => AddStudentScreen()),
           );
-          // showDialog(
-          //   context: context,
-          //   builder: (context) => _buildAddStudentDialog(context, null),
-          // );
         },
         child: Icon(Icons.add),
       ),
@@ -379,24 +350,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title: Text('Delete'),
                 onTap: () {
                   // Delete the student
-                  Provider.of<StudentProvider>(context, listen: false)
-                      .deleteStudent(student.id!); // Pass the student's id
+                  deleteStudent(student.regNumber!);
+                  // Provider.of<StudentProvider>(context, listen: false)
+                  //     .deleteStudent(
+                  //         student.regNumber!, context); // Pass the student's id
                   Navigator.of(context).pop(); // Close the dialog
                 },
               ),
               ListTile(
                 title: Text('Update'),
                 onTap: () {
-                  // Navigate to the screen for updating the student
                   Navigator.of(context).pop(); // Close the dialog
-                  // Navigate to the update screen and pass the student object
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) =>
-                  //         UpdateStudentScreen(student: student),
-                  //   ),
-                  // );
                 },
               ),
             ],
@@ -404,5 +368,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       },
     );
+  }
+
+  void _showStudentDetailsDialog(BuildContext context, Student student) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Student Details'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('First Name: ${student.first_name}'),
+              Text('Last Name: ${student.last_name}'),
+              Text('Registration Number: ${student.regNumber}'),
+              Text('Gender: ${student.gender}'),
+              Text('Program: ${student.program}'),
+              Text('Class: ${student.studentClass}'),
+              Text('NTA Level: ${student.ntaLevel}'),
+              Text(
+                  'Eligibility: ${student.isEligible != null ? (student.isEligible! ? 'Eligible' : 'Not Eligible') : 'Unknown'}'),
+              SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Close'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class Student {
+  String? regNumber; // Registration number
+  String? first_name;
+  String? last_name;
+  String? gender;
+  String? program;
+  String? studentClass;
+  String? ntaLevel;
+  Uint8List? picture; // Student picture as byte array
+  bool? isEligible;
+
+  Student({
+    this.regNumber,
+    this.first_name,
+    this.last_name,
+    this.gender,
+    this.program,
+    this.studentClass,
+    this.ntaLevel,
+    this.picture,
+    this.isEligible,
+  });
+
+  // Create a Student object from a Map object.
+  Student.fromMap(Map<String, dynamic> map) {
+    regNumber = map['registration'];
+    first_name = map['first_name'];
+    last_name = map['last_name'];
+    gender = map['gender'];
+    program = map['program'];
+    studentClass = map['class'];
+    ntaLevel = map['nta_level'];
+    isEligible = map['is_eligible'] == "True";
+    picture = base64Decode(map['image']);
   }
 }

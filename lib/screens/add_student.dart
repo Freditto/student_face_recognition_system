@@ -24,7 +24,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final TextEditingController _regNumberController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _programController = TextEditingController();
-  final TextEditingController _classController = TextEditingController();
+  // final TextEditingController _classController = TextEditingController();
   final TextEditingController _ntaLevelController = TextEditingController();
 
   final ValueNotifier<bool> _isEligible = ValueNotifier<bool>(false);
@@ -34,6 +34,10 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
 
   bool imageAvailable = false;
   late Uint8List imageFile;
+
+  String? _selectedGender; // Add this variable to hold selected gender
+
+  List<String> genderOptions = ['Male', 'Female']; // Gender options
 
   Future<void> _getImage() async {
     try {
@@ -69,7 +73,7 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
       "registration": _regNumberController.text,
       "gender": _genderController.text,
       "program": _programController.text,
-      "class": _classController.text,
+      // "class": _classController.text,
       "nta_level": _ntaLevelController.text,
       "is_eligible": _isEligible.value.toString(),
     });
@@ -203,16 +207,27 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   ),
                 ),
                 SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _genderController,
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedGender = newValue;
+                    });
+                  },
+                  items: genderOptions.map((gender) {
+                    return DropdownMenuItem(
+                      value: gender,
+                      child: Text(gender),
+                    );
+                  }).toList(),
                   decoration: InputDecoration(
                     labelText: 'Gender',
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(20.0), // Rounded corners
+                      borderRadius: BorderRadius.circular(20.0),
                     ),
                   ),
                 ),
+
                 SizedBox(height: 16.0),
                 TextFormField(
                   controller: _programController,
@@ -225,17 +240,17 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                   ),
                 ),
                 SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _classController,
-                  decoration: InputDecoration(
-                    labelText: 'Class',
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(20.0), // Rounded corners
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.0),
+                // TextFormField(
+                //   controller: _classController,
+                //   decoration: InputDecoration(
+                //     labelText: 'Class',
+                //     border: OutlineInputBorder(
+                //       borderRadius:
+                //           BorderRadius.circular(20.0), // Rounded corners
+                //     ),
+                //   ),
+                // ),
+                // SizedBox(height: 16.0),
                 TextFormField(
                   controller: _ntaLevelController,
                   decoration: InputDecoration(
@@ -283,18 +298,16 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                     // Provider.of<StudentProvider>(context, listen: false)
                     //     .addStudent(newStudent);
                     _add_record_API();
-                   
+
                     // }
                   },
                   child: Text('Add Student'),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(20.0), // Rounded corners
+                      borderRadius: BorderRadius.circular(20.0),
                     ),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 16.0), // Increase height
-                    minimumSize: Size(double.infinity, 0), // Take full width
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    minimumSize: Size(double.infinity, 0),
                   ),
                 ),
               ],

@@ -252,64 +252,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: PageView(
               controller: pageController,
               children: [
-                Container(
-                  color: Colors.white,
-                  child: const Center(
-                    child: Text(
-                      'Dashboard',
-                      style: TextStyle(fontSize: 35),
-                    ),
-                  ),
+                WebDashboard(
+                  totalStudents: 1000, // Provide the total number of students
+                  eligibleStudents:
+                      750, // Provide the number of eligible students
                 ),
-                ListView.builder(
-                  itemCount: studentDataList?.length ??
-                      1, // Show loader if data is not available
-                  itemBuilder: (context, index) {
-                    if (studentDataList == null) {
-                      // Display loader if data is not yet available
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                        ],
-                      );
-                    } else {
-                      final student = studentDataList![index];
-                      return GestureDetector(
-                        onTap: () {
-                          // Handle tap event if needed
-                        },
-                        onLongPress: () {
-                          _showOptionsDialog(context, student);
-                        },
-                        child: ListTile(
-                          leading: student.picture != null
-                              ? CircleAvatar(
-                                  backgroundImage:
-                                      MemoryImage(student.picture!),
-                                )
-                              : null,
-                          title: Text(
-                              '${student.first_name} ${student.last_name}'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Reg Number: ${student.regNumber}'),
-                              Text(
-                                  'Eligibility: ${student.isEligible != null ? (student.isEligible! ? 'Eligible' : 'Not Eligible') : 'Unknown'}'),
-                            ],
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.info),
-                            onPressed: () {
-                              _showStudentDetailsDialog(context, student);
-                            },
-                          ),
+                Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        child: Text(
+                          'Student List',
+                          style: TextStyle(
+                              fontSize: 40, fontWeight: FontWeight.bold),
                         ),
-                      );
-                    }
-                  },
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: studentDataList?.length ??
+                              1, // Show loader if data is not available
+                          itemBuilder: (context, index) {
+                            if (studentDataList == null) {
+                              // Display loader if data is not yet available
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(),
+                                ],
+                              );
+                            } else {
+                              final student = studentDataList![index];
+                              return GestureDetector(
+                                onTap: () {
+                                  // Handle tap event if needed
+                                },
+                                onLongPress: () {
+                                  _showOptionsDialog(context, student);
+                                },
+                                child: ListTile(
+                                  leading: student.picture != null
+                                      ? CircleAvatar(
+                                          backgroundImage:
+                                              MemoryImage(student.picture!),
+                                        )
+                                      : null,
+                                  title: Text(
+                                      '${student.first_name} ${student.last_name}'),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Reg Number: ${student.regNumber}'),
+                                      Text(
+                                          'Eligibility: ${student.isEligible != null ? (student.isEligible! ? 'Eligible' : 'Not Eligible') : 'Unknown'}'),
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.info),
+                                    onPressed: () {
+                                      _showStudentDetailsDialog(context, student);
+                                    },
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Container(
                   color: Colors.white,
@@ -385,7 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text('Registration Number: ${student.regNumber}'),
               Text('Gender: ${student.gender}'),
               Text('Program: ${student.program}'),
-              Text('Class: ${student.studentClass}'),
+              // Text('Class: ${student.studentClass}'),
               Text('NTA Level: ${student.ntaLevel}'),
               Text(
                   'Eligibility: ${student.isEligible != null ? (student.isEligible! ? 'Eligible' : 'Not Eligible') : 'Unknown'}'),
@@ -412,7 +426,7 @@ class Student {
   String? last_name;
   String? gender;
   String? program;
-  String? studentClass;
+  // String? studentClass;
   String? ntaLevel;
   Uint8List? picture; // Student picture as byte array
   bool? isEligible;
@@ -423,7 +437,7 @@ class Student {
     this.last_name,
     this.gender,
     this.program,
-    this.studentClass,
+    // this.studentClass,
     this.ntaLevel,
     this.picture,
     this.isEligible,
@@ -436,9 +450,101 @@ class Student {
     last_name = map['last_name'];
     gender = map['gender'];
     program = map['program'];
-    studentClass = map['class'];
+    // studentClass = map['class'];
     ntaLevel = map['nta_level'];
     isEligible = map['is_eligible'] == "True";
     picture = base64Decode(map['image']);
+  }
+}
+
+class WebDashboard extends StatelessWidget {
+  final int totalStudents;
+  final int eligibleStudents;
+
+  WebDashboard({
+    required this.totalStudents,
+    required this.eligibleStudents,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        padding: EdgeInsets.all(20),
+        color: Colors.grey[200],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                'Dashboard Overview',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildInfoCard(
+                  title: 'Total Students',
+                  value: totalStudents.toString(),
+                  color: Colors.blue,
+                ),
+                _buildInfoCard(
+                  title: 'Eligible Students',
+                  value: eligibleStudents.toString(),
+                  color: Colors.green,
+                ),
+              ],
+            ),
+            SizedBox(height: 30),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    'Chart Widget Placeholder',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+                fontSize: 24, fontWeight: FontWeight.bold, color: color),
+          ),
+        ],
+      ),
+    );
   }
 }
